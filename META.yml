@@ -1,0 +1,12 @@
+# http://module-build.sourceforge.net/META-spec.html
+#XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
+name:         Template-Plugin-Latex
+version:      3.0001
+version_from: lib/Template/Plugin/Latex.pm
+installdirs:  site
+requires:
+    LaTeX::Driver:                 0.04
+    Template:                      2.16
+
+distribution_type: module
+generated_by: ExtUtils::MakeMaker version 6.30

@@ -1,0 +1,59 @@
+#================================================= -*- indented-text -*-
+#
+# Changes 
+#
+# DESCRIPTION
+#   Revision history for the Template Toolkit Latex plugin.
+#
+# AUTHOR
+#   Andrew Ford   <A.Ford@ford-mason.co.uk>
+#
+#
+#------------------------------------------------------------------------
+# $Id: Changes 66 2007-09-15 15:01:33Z ford $
+#========================================================================
+
+#------------------------------------------------------------------------
+# Version 3.00_01 - 2007-09-13
+#------------------------------------------------------------------------
+
+* I have restructured the plugin fairly extensively, and added
+  radically new features, so this release has a new major version
+  number, i.e. 3.x.
+
+* Restructured Template::Latex to run latex multiple times if
+  necessary and also to run bibtex if citations are detected and
+  makeindex if indexing is detected.
+
+* The TEXINPUTS environment variable is set up to include the original
+  directory so that include files can be found there.
+
+* Change the format of the commands passed to system() so that the cd
+  into the temporary directory is done in the command rather than in
+  the module.  That way the module does not need to change back to the
+  original directory, simplifying error handling.  
+  (The Win32 idiom is: 'cmd /c "cd DIR && COMMAND"')
+
+* Split the driver code in Template::Latex out into its own module
+  (Template::Latex::Driver).
+
+* The LaTeX macro \TTLATEX is defined when latex or pdflatex is run
+
+* The static filter detex is defined by the plugin
+
+#------------------------------------------------------------------------
+# Version 2.17 - 2006-06-07
+#------------------------------------------------------------------------
+
+* Changes dependency on Template to version 2.15 as version 2.16 of
+  Template, which was specified as the dependency has not been relased.
+
+* Added files: Changes (this file) and TODO
+
+
+#------------------------------------------------------------------------
+# Version 2.16 - 2006-05-31
+#------------------------------------------------------------------------
+
+First release of the plugin as a separate distribution to the core
+Template Toolkit distribution.  New maintainer: Andrew Ford.

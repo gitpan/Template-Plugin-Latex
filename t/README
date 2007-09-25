@@ -1,0 +1,8 @@
+This is the Template::Latex unit test directory.
+
+It contains the unit test files and the directories:
+
+    lib     contains a test helper module
+    input   contains test input files
+    output  this is the destination for testing of generated DVI/PS/PDF documents
+
