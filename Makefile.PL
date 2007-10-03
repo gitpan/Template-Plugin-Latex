@@ -59,6 +59,7 @@ my %opts = (
         'Template'      => 2.16,
 	'LaTeX::Driver' => 0.06,
 	'LaTeX::Encode' => 0.02,
+	'LaTeX::Table'  => 0,
     },
     'dist'         => {
         'COMPRESS' => 'gzip',

@@ -6,3 +6,5 @@ It contains the unit test files and the directories:
     input   contains test input files
     output  this is the destination for testing of generated DVI/PS/PDF documents
 
+The unit test 11-plugin-errors.t is does not yet pass - the errors are
+in the test script.

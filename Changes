@@ -14,6 +14,26 @@
 #========================================================================
 
 #------------------------------------------------------------------------
+# Version 3.00_03 - 2007-10-03
+#------------------------------------------------------------------------
+
+* Added a "table" method to the plugin to interface to the
+  LaTeX::Table module.  This will generate the LaTeX commands to
+  format a table from raw data.
+
+#------------------------------------------------------------------------
+# Version 3.00_02 - 2007-10-03
+#------------------------------------------------------------------------
+
+* Restructured again so that Template::Latex calls the
+  Template::Plugin::Latex module, which in turn builds on
+  LaTeX::Driver to format the document.  (Removed the
+  Template::Latex::Paths module as the paths are now held in the
+  LaTeX::Driver module.)
+
+* Expanded the test suite and the documentaton.
+
+#------------------------------------------------------------------------
 # Version 3.00_01 - 2007-09-13
 #------------------------------------------------------------------------
 

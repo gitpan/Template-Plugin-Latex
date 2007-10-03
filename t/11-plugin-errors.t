@@ -2,6 +2,8 @@
 #
 # t/11-plugin.t
 #
+# THIS TEST SCRIPT DOES NOT YET PASS - THE ERRORS ARE IN THE SCRIPT ITSELF
+#
 # Test the Template::Plugin::Latex module.
 #
 # Written by Andy Wardley <abw@wardley.org>

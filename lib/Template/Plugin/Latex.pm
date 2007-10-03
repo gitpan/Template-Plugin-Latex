@@ -36,9 +36,10 @@ use base 'Template::Plugin';
 use File::Spec;
 use LaTeX::Driver 0.06;
 use LaTeX::Encode;
+use LaTeX::Table;
 
 
-our $VERSION = "3.00_02";
+our $VERSION = "3.00_03";
 our $DEBUG   = 0 unless defined $DEBUG;
 our $ERROR   = '';
 our $FILTER  = 'latex';
@@ -91,7 +92,8 @@ sub new {
     # now define the filter and return the plugin
     $context->define_filter('latex_encode', [ $encode_filter_factory => 1 ]);
     $context->define_filter($options->{filter} || $FILTER, [ $filter_factory => 1 ]);
-    return $plugin;
+
+    return bless $plugin, $class;
 }
 
 
@@ -137,7 +139,7 @@ sub _tt_latex_filter {
 
     if ($output) {
         my $path = $context->config->{ OUTPUT_PATH }
-            or $class->throw('OUTPUT_PATH is not set');
+            or $class->_throw('OUTPUT_PATH is not set');
         $output = File::Spec->catfile($path, $output);
     }
     else {
@@ -158,7 +160,7 @@ sub _tt_latex_filter {
         $drv->run;
     };        
     if (my $e = LaTeX::Driver::Exception->caught()) {
-        $class->throw("$e");
+        $class->_throw("$e");
     }
 
     # Return the text if it was output to a scalar variable, otherwise
@@ -195,12 +197,24 @@ sub _setup_texinput_paths {
 }
 
 
-sub throw {
+sub _throw {
     my $self = shift;
     die Template::Exception->new( $THROW => join('', @_) );
 }
 
 
+sub table {
+    my $args  = ref($_[-1]) eq 'HASH' ? pop(@_) : { };
+    my ($table, $text);
+    eval {
+        $table = LaTeX::Table->new($args);
+        $text  = $table->generate_string;
+    };
+    if ($@) {
+        die Template::Exception->new( $THROW => $@ );
+    }
+    return $text;
+}
 
 
 1;
@@ -213,7 +227,7 @@ Template::Plugin::Latex - Template Toolkit plugin for Latex
 
 =head1 VERSION
 
-This documentation refers to C<Template::Plugin::Latex> version 3.00_01
+This documentation refers to C<Template::Plugin::Latex> version 3.00_03
 
 =head1 SYNOPSIS
 
@@ -335,6 +349,29 @@ C<use_textcomp = 0> turns off these encodings.
 
 =back
 
+=head2 C<table()>
+
+The C<table()> function provides an interface to the C<LaTeX::Table> module.
+
+The following example shows how a simple table can be set up.
+
+    [%- USE Latex;
+
+        data = [ [ 'London', 'United Kingdom' ],
+                 [ 'Berlin', 'Germany'        ],
+                 [ 'Paris',  'France'         ],
+                 [ 'Washington', 'USA'        ] ] );
+
+        text = Latex.table( caption  = 'Capitol Cities',
+                            label    = 'table:capitols',
+                            headings = [ [ 'City', 'Country' ] ],
+                            data     = data );
+     -%]
+                            
+The variable C<text> will hold the LaTeX commands to typeset the table
+and can be further interpolated into a LaTeX document template.
+
+TO BE EXPANDED.
 
 
 =head1 OLD DOCUMENTATION
@@ -465,7 +502,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 =head1 SEE ALSO
 
-L<Template::Latex>, L<LaTeX::Driver>
+L<Template::Latex>, L<LaTeX::Driver>, L<LaTeX::Table>
 
 =cut
 

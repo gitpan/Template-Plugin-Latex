@@ -16,7 +16,6 @@ use warnings;
 use lib qw( ./lib ../lib );
 use Template;
 use Template::Test;
-use Template::Latex;
 use File::Spec;
 
 $Template::Latex::DEBUG = grep(/-d/, @ARGV);
