@@ -37,26 +37,16 @@ package Template::Latex;
 use strict;
 use warnings;
 use base 'Template';
-#use Template::Exception;
-use Template::Latex::Driver;
-
+use Template::Exception;
+use Template::Plugin::Latex;
+use LaTeX::Driver;
 
 our $VERSION  = 3.00_01;
 our $DEBUG    = 0 unless defined $DEBUG;
 our $ERROR    = '';
 our $FILTER   = 'latex';        # default filter name
 our $FORMAT   = '';             # output format (auto-detect if unset)
-
-# LaTeX executable paths set at installation time by the Makefile.PL
-
-eval "require Template::Latex::Paths";
-our $LATEX     = $Template::Latex::Paths::LATEX     || '/usr/bin/latex';
-our $PDFLATEX  = $Template::Latex::Paths::PDFLATEX  || '/usr/bin/pdflatex';
-our $DVIPS     = $Template::Latex::Paths::DVIPS     || '/usr/bin/dvips';
-our $PS2PDF    = $Template::Latex::Paths::PS2PDF    || '/usr/bin/ps2pdf';
-our $BIBTEX    = $Template::Latex::Paths::BIBTEX    || '/usr/bin/bibtex';
-our $MAKEINDEX = $Template::Latex::Paths::MAKEINDEX || '/usr/bin/makeindex';
-
+our @PROGRAMS = qw( latex pdflatex bibtex makeindex dvips ps2pdf );
 
 
 sub new {
@@ -64,22 +54,25 @@ sub new {
     my $config = @_ && ref $_[0] eq 'HASH' ? shift : { @_ };
     my $self   = $class->SUPER::new($config) || return;
 
-    # set default format from config option
-    $self->latex_format($config->{ LATEX_FORMAT })
-        if $config->{ LATEX_FORMAT };
+#     # set default format from config option
+#     $self->latex_format($config->{ LATEX_FORMAT })
+#         if $config->{ LATEX_FORMAT };
 
-    # set latex paths from config options
-    $self->latex_paths({
-        latex     => $config->{ LATEX_PATH     },
-        pdflatex  => $config->{ PDFLATEX_PATH  },
-        dvips     => $config->{ DVIPS_PATH     },
-        ps2pdf    => $config->{ PS2PDF_PATH    },
-        bibtex    => $config->{ BIBTEX_PATH    },
-        makeindex => $config->{ MAKEINDEX_PATH },
-    });
+#     # set latex paths from config options
+#     $self->latex_paths({
+#         latex     => $config->{ LATEX_PATH     },
+#         pdflatex  => $config->{ PDFLATEX_PATH  },
+#         dvips     => $config->{ DVIPS_PATH     },
+#         ps2pdf    => $config->{ PS2PDF_PATH    },
+#         bibtex    => $config->{ BIBTEX_PATH    },
+#         makeindex => $config->{ MAKEINDEX_PATH },
+#     });
+
 
     # install the latex filter
-    $self->define_filter( $self->context() );
+    Template::Plugin::Latex->new($self->context, {});
+
+   #$self->define_filter( $self->context() );
 
     return $self;
 }
@@ -103,32 +96,32 @@ sub latex_format {
 
 sub latex_path {
     my $class = shift;
-    return @_ ? ($LATEX = shift) : $LATEX;
+    return LaTeX::Driver->program_path('latex', @_);
 }
 
 sub pdflatex_path {
     my $class = shift;
-    return @_ ? ($PDFLATEX = shift) : $PDFLATEX;
+    return LaTeX::Driver->program_path('pdflatex', @_);
 }
 
 sub dvips_path {
     my $class = shift;
-    return @_ ? ($DVIPS = shift) : $DVIPS;
+    return LaTeX::Driver->program_path('dvips', @_);
 }
 
 sub ps2pdf_path {
     my $class = shift;
-    return @_ ? ($PS2PDF = shift) : $PS2PDF;
+    return LaTeX::Driver->program_path('ps2pdf', @_);
 }
 
 sub bibtex_path {
     my $class = shift;
-    return @_ ? ($BIBTEX = shift) : $BIBTEX;
+    return LaTeX::Driver->program_path('bibtex', @_);
 }
 
 sub makeindex_path {
     my $class = shift;
-    return @_ ? ($MAKEINDEX = shift) : $MAKEINDEX;
+    return LaTeX::Driver->program_path('makeindex', @_);
 }
 
 
@@ -142,41 +135,20 @@ sub latex_paths {
     my $class = shift;
     if (@_) {
         my $args = ref $_[0] eq 'HASH' ? shift : { @_ };
-        $class->latex_path($args->{ latex }) 
-            if defined $args->{ latex };
-        $class->pdflatex_path($args->{ pdflatex }) 
-            if defined $args->{ pdflatex };
-        $class->dvips_path($args->{ dvips }) 
-            if defined $args->{ dvips };
-        $class->ps2pdf_path($args->{ ps2pdf }) 
-            if defined $args->{ ps2pdf };
-        $class->bibtex_path($args->{ bibtex }) 
-            if defined $args->{ bibtex };
-        $class->makeindex_path($args->{ makeindex }) 
-            if defined $args->{ makeindex };
+
+        LaTeX::Driver->program_path($_, $args->{$_})
+            for qw( latex pdflatex bibtex makeindex dvips ps2pdf );
     }
     else {
         return {
-            latex     => $LATEX,
-            pdflatex  => $PDFLATEX,
-            dvips     => $DVIPS,
-            ps2pdf    => $PS2PDF,
-            bibtex    => $BIBTEX,
-            makeindex => $MAKEINDEX,
-        } 
+            map { ( $_ => LaTeX::Driver->program_path($_) ) } @PROGRAMS
+        };
     }
 }
 
+1;
 
-sub detex_filter { 
-    my $text = shift;
-    $text =~ s/\x{01}/\x{01}\x{02}/g;
-    $text =~ s/\\/\x{01}\x{03}/g;
-    $text =~ s/([{}&_%#^\$])/\\$1/g;
-    $text =~ s/\x{01}\x{03}/\\textbackslash{}/g;
-    $text =~ s/\x{01}\x{02}/\x{01}/g;
-    return $text;
-}
+__END__
 
 
 #------------------------------------------------------------------------
@@ -187,47 +159,47 @@ sub detex_filter {
 # providing default configuration options.  
 #------------------------------------------------------------------------
 
-sub define_filter {
-    my $class   = shift;
-    my $context = shift;
-    my $default = @_ && ref $_[0] eq 'HASH' ? shift : { @_ };
-    my $filter  = $default->{ filter } || $FILTER;
+# sub define_filter {
+#     my $class   = shift;
+#     my $context = shift;
+#     my $default = @_ && ref $_[0] eq 'HASH' ? shift : { @_ };
+#     my $filter  = $default->{ filter } || $FILTER;
 
-    # default any config item not set to values in package variables
-    $default->{ format    } ||= $FORMAT;
-    $default->{ latex     } ||= $LATEX;
-    $default->{ pdflatex  } ||= $PDFLATEX;
-    $default->{ dvips     } ||= $DVIPS;
-    $default->{ ps2pdf    } ||= $PS2PDF;
-    $default->{ bibtex    } ||= $BIBTEX;
-    $default->{ makeindex } ||= $MAKEINDEX;
+#     # default any config item not set to values in package variables
+#     $default->{ format    } ||= $FORMAT;
+#     $default->{ latex     } ||= $LATEX;
+#     $default->{ pdflatex  } ||= $PDFLATEX;
+#     $default->{ dvips     } ||= $DVIPS;
+#     $default->{ ps2pdf    } ||= $PS2PDF;
+#     $default->{ bibtex    } ||= $BIBTEX;
+#     $default->{ makeindex } ||= $MAKEINDEX;
 
-    # define a factory subroutine to be called when the filter is used.
-    my $factory = sub { 
-        my $context = shift;
-        my $config  = @_ && ref $_[0] eq 'HASH' ? pop : { };
+#     # define a factory subroutine to be called when the filter is used.
+#     my $factory = sub { 
+#         my $context = shift;
+#         my $config  = @_ && ref $_[0] eq 'HASH' ? pop : { };
 
-        # merge any configuration parameters specified when the filter
-        # is used with the defaults provided when the filter was defined
-        $config->{ $_ } ||= $default->{ $_ } 
-            for (qw( format latex pdflatex dvips ps2pdf bibtex makeindex ));
+#         # merge any configuration parameters specified when the filter
+#         # is used with the defaults provided when the filter was defined
+#         $config->{ $_ } ||= $default->{ $_ } 
+#             for (qw( format latex pdflatex dvips ps2pdf bibtex makeindex ));
 
-        # output file can be specified as the first argument
-        $config->{ output } = shift if @_;
+#         # output file can be specified as the first argument
+#         $config->{ output } = shift if @_;
 
-        $config->{ DEBUG } ||= $DEBUG;
+#         $config->{ DEBUG } ||= $DEBUG;
 
-        # return an anonymous filter subroutine which calls the real
-        # filter() method passing the context and merged config params
-        return sub {
-            Template::Latex::Driver->run(shift, $context, $config);
-        };
-    };
+#         # return an anonymous filter subroutine which calls the real
+#         # filter() method passing the context and merged config params
+#         return sub {
+#             Template::Latex::Driver->run(shift, $context, $config);
+#         };
+#     };
 
-    # install the filter factory in the context
-    $context->define_filter( $filter => $factory, 1 );
-    $context->define_filter( detex => \&detex_filter );
-}
+#     # install the filter factory in the context
+#     $context->define_filter( $filter => $factory, 1 );
+#     $context->define_filter( detex => \&detex_filter );
+# }
 
 
 1;

@@ -13,7 +13,10 @@
 
 use strict;
 use warnings;
-use lib qw( ./lib ../lib );
+use FindBin qw($Bin);
+use Cwd qw(abs_path);
+use lib ( abs_path("$Bin/../lib") );
+
 use Template::Latex;
 use Template::Test;
 use File::Spec;

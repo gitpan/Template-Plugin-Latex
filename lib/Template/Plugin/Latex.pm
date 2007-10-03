@@ -23,6 +23,7 @@
 #     Andy Wardley, 27 May 2006
 #   * Removed the program pathname options on the FILTER call
 #     Andrew Ford, 05 June 2006
+#   * Totally rewritten by Andrew Ford September 2007
 #
 #========================================================================
  
@@ -32,12 +33,16 @@ use strict;
 use warnings;
 use base 'Template::Plugin';
 
-use LaTeX::Driver;
+use File::Spec;
+use LaTeX::Driver 0.06;
+use LaTeX::Encode;
 
-our $VERSION = 3.00_01;
+
+our $VERSION = "3.00_02";
 our $DEBUG   = 0 unless defined $DEBUG;
 our $ERROR   = '';
 our $FILTER  = 'latex';
+our $THROW   = 'latex';        # exception type
 
 #------------------------------------------------------------------------
 # constructor
@@ -57,7 +62,20 @@ sub new {
         my $filter_args = [ @_ ];
         @$filter_opts{ keys %$options } = values %$options;
         return sub {
-            Template::Plugin::Latex::_filter->run($context, $filter_opts, $filter_args, @_);
+            # Template::Plugin::Latex::_filter->run($context, $filter_opts, $filter_args, @_);
+            _tt_latex_filter($class, $context, $filter_opts, $filter_args, @_);
+        };
+    };
+
+    # create a closure to generate filters with additional options
+    my $encode_filter_factory = sub {
+        my $context = shift;
+        my $filter_opts = ref $_[-1] eq 'HASH' ? pop : { };
+        my $filter_args = [ @_ ];
+        @$filter_opts{ keys %$options } = values %$options;
+        return sub {
+            # Template::Plugin::Latex::_filter->run($context, $filter_opts, $filter_args, @_);
+            _tt_latex_encode_filter($class, $context, $filter_opts, $filter_args, @_);
         };
     };
 
@@ -65,174 +83,88 @@ sub new {
     my $plugin = sub {
         my $plugopt = ref $_[-1] eq 'HASH' ? pop : { };
         @$plugopt{ keys %$options } = values %$options;
-        Template::Plugin::Latex::_filter->run($context, $plugopt, @_ );
+        # Template::Plugin::Latex::_filter->run($context, $plugopt, @_ );
+        _tt_latex_filter($class, $context, $plugopt, {}, @_ );
     };
 
 
     # now define the filter and return the plugin
-    $context->define_filter('latex_encode', \&_tt_latex_encode_filter);
+    $context->define_filter('latex_encode', [ $encode_filter_factory => 1 ]);
     $context->define_filter($options->{filter} || $FILTER, [ $filter_factory => 1 ]);
     return $plugin;
 }
 
 
-
-our %latex_encoding;
-
-# Greek letters
-my $i = 0;
-foreach (qw( alpha beta gamma delta epsilon zeta eta theta
-             iota kappa lamda mu nu xi omicron pi rho
-             final_sigma sigma tau upsilon phi chi psi omega ))
-{
-    $latex_encoding{chr(0x3b1+$i)} = "\\$_";
-    $latex_encoding{chr(0x391+$i)} = "\\\u$_";
-    $i++;
-}
-
-# Special Characters from http://www.cs.wm.edu/~mliskov/texsymbols.pdf
-
-my %euro = (
-    chr(0x2020) => 'dag', # Dagger
-    chr(0x2021) => 'ddag', # Double-dagger
-    chr(0xa7)   => 'S', # Section mark
-    chr(0xb6)   => 'P', # Paragraph
-    chr(0xdf)   => 'ss', # German sharp S
-    chr(0x152)  => 'OE', # French ligature OE
-    chr(0x153)  => 'oe', # French ligature oe
-    chr(0x141)  => 'L', # Polish suppressed-l
-    chr(0x142)  => 'l', # Polish suppressed-L
-    chr(0xd8)   => 'O', # Scandinavian O-with-slash
-    chr(0xf8)   => 'o', # Scandinavian o-with-slash
-    chr(0xc5)   => 'AA', # Scandinavian A-with-circle
-    chr(0xe5)   => 'aa', # Scandinavian a-with-circle
-    chr(0x131)  => 'i', # dotless i
-    chr(0x237)  => 'j', # dotless j
-    );
-
+#------------------------------------------------------------------------
+# _tt_latex_encode_filter
+#
+#
+#------------------------------------------------------------------------
 
 sub _tt_latex_encode_filter { 
-    my $options = ref $_[-1] eq 'HASH' ? pop : { };
-    my $text = shift;
-    $text =~ s/\x{01}/\x{01}\x{02}/g;
-    $text =~ s/\\/\x{01}\x{03}/g;
-    $text =~ s/([{}&_%#^\$])/\\$1/g;
-    if (!exists $options->{use_textcomp} or !$options->{use_textcomp}) {
-        $text =~ s/([^\x00-\x80])(?![A-Za-z0-9])/$latex_encoding{$1}/sg;
-        $text =~ s/([^\x00-\x80])/$latex_encoding{$1}\{\}/sg;
-    }
-    $text =~ s/\x{01}\x{03}/\\textbackslash{}/g;
-    $text =~ s/\x{01}\x{02}/\x{01}/g;
-    return $text;
-}
-
-
-
-
-#------------------------------------------------------------------------
-#  Internal package in which to run the filter
-#------------------------------------------------------------------------
-
-package Template::Plugin::Latex::_filter;
-
-use strict;
-use warnings;
-use base 'Class::Accessor';
-
-use File::Spec;
-use File::Copy;
-use File::Path;
-
-__PACKAGE__->mk_accessors( qw(tmpdir basename basepath context options) );
-
-our $TMP_DIRNAME = 'tt2latex';     # temporary directory name
-our $TMP_DOCNAME = 'tt2latex';     # temporary file name
-our $THROW       = 'latex';        # exception type
-our $DEBUG;
-
-sub run {
-    my ($class, $context, $options, $filter_args, $text) = @_;
-
-    # Make a copy of the options hash.
-    $options = { %$options };
-
-    my $self = $class->SUPER::new({ context => $context,
-                                    options => $options });
-
-
-    my $output   = delete $options->{ output } || shift(@$filter_args) || '';
-    my $basename = $output || $TMP_DOCNAME;
-    if ($basename =~ s/(?:(.*?)\.)?(dvi|ps|pdf(?:\(dvi\)|\(ps\))?)$/$1/) {
-        $options->{format} = $2;
-    }
-
-    $basename =~ s/\.\w+$//;
-    $self->options->{basename} = $self->basename($basename);
-
-    $self->setup_tmpdir;
-    $self->setup_texinput_paths;
-    $self->create_latex_file($text);
-    
-    my $drv = LaTeX::Driver->new($options);
-
-    eval { $drv->run; };
-    
-    if (my $e = LaTeX::Driver::Exception->caught()) {
-        $self->throw("$e");
-    }
-
-    $output = $self->copy_output($output);
-    $self->cleanup;
-    return $output;
+    my ($class, $context, $options, $filter_args, @text) = @_;
+    my $text = join('', @text);
+    return latex_encode($text, %{$options});
 }
 
 
 #------------------------------------------------------------------------
-# $self->_setup_tmpdir
+# _tt_latex_filter
 #
-# create a temporary directory 
+#
 #------------------------------------------------------------------------
 
-sub setup_tmpdir {
-    my $self = shift;
+sub _tt_latex_filter {
+    my ($class, $context, $options, $filter_args, @text) = @_;
+    my $text = join('', @text);
 
-    my $tmp  = File::Spec->tmpdir();
-    my $dir  = $self->options->{tmpdir};
+    # Get the output and format options
 
-    if ($dir) {
-        $dir = File::Spec->catdir($tmp, $dir);
-        eval { mkpath($dir, 0, 0700) } unless -d $dir;
+#    my $output = $options->{output};
+    my $output = delete $options->{ output } || shift(@$filter_args) || '';
+    my $format = $options->{format};
+
+    # If the output is just a format specifier then set the format to
+    # that and undef the output
+
+    if ($output =~ /^ (?: dvi | ps | pdf(?:\(\w+\))? ) $/x) {
+        ($format, $output) = ($output, undef);
+    }
+
+    # If the output is a filename then convert to a full pathname in
+    # the OUTPUT_PATH directory, outherwise set the output to a
+    # reference to a temporary variable.
+
+    if ($output) {
+        my $path = $context->config->{ OUTPUT_PATH }
+            or $class->throw('OUTPUT_PATH is not set');
+        $output = File::Spec->catfile($path, $output);
     }
     else {
-        my $n = 0;
-        do { 
-            $dir = File::Spec->catdir($tmp, "$TMP_DIRNAME$$" . '_' . $n++);
-        } while (-e $dir);
-        eval { mkpath($dir, 0, 0700) };
+        my $temp;
+        $output = \$temp;
     }
-    $self->throw("failed to create temporary directory: $@") 
-        if $@;
-    $self->options->{basedir} = $self->tmpdir($dir);
-    return;
-}
 
-#------------------------------------------------------------------------
-# $self->create_latex_file($text)
-#
-# Create the LaTeX input file in the temporary directory.
-#------------------------------------------------------------------------
+    # Run the formatter
 
-sub create_latex_file {
-    my ($self, $text) = @_;
-    local(*FH);
-
-    # open .tex file for output
-    my $file = $self->basepath . ".tex";
-    unless (open(FH, ">$file")) {
-        $self->throw("failed to open $file for output: $!");
+    eval {
+        my $drv = LaTeX::Driver->new( source    => \$text,
+                                      output    => $output,
+                                      format    => $format,
+                                      maxruns   => $options->{maxruns},
+                                      extraruns => $options->{extraruns},
+                                      texinputs => _setup_texinput_paths($context),
+                                    );
+        $drv->run;
+    };        
+    if (my $e = LaTeX::Driver::Exception->caught()) {
+        $class->throw("$e");
     }
-    print(FH $text);
-    close(FH);
+
+    # Return the text if it was output to a scalar variable, otherwise
+    # return nothing.
+
+    return ref $output ? $$output : '';
 }
 
 
@@ -242,9 +174,8 @@ sub create_latex_file {
 # setup the TEXINPUT path environment variables
 #------------------------------------------------------------------------
 
-sub setup_texinput_paths {
-    my $self = shift;
-    my $context = $self->context;
+sub _setup_texinput_paths {
+    my ($context) = @_;
     my $template_name = $context->stash->get('template.name');
     my $include_path  = $context->config->{INCLUDE_PATH} || [];
     $include_path = [ $include_path ] unless ref $include_path;
@@ -260,102 +191,16 @@ sub setup_texinput_paths {
         }
         push @texinput_paths, $path;
     }
-    $self->options->{TEXINPUTS} = \@texinput_paths;
+    return  \@texinput_paths;
 }
 
-#------------------------------------------------------------------------
-# $self->output
-#
-# Create the LaTeX input file in the temporary directory.
-#------------------------------------------------------------------------
-
-sub copy_output {
-    my ($self, $output) = @_;
-    my ($data, $path, $dest, $ok);
-    local(*FH);
-
-    # construct file name of the generated document
-    my $options = $self->options;
-    my $format  = $options->{format} || '';
-    $format =~ s/\(.*\)//;
-
-    my $file = $self->basepath . '.' . ($format || 'dvi');
-
-    if ($output) {
-        $path = $self->context->config->{ OUTPUT_PATH }
-            || $self->throw('OUTPUT_PATH is not set');
-        $dest = File::Spec->catfile($path, $output);
-
-        # see if we can rename the generate file to the desired output 
-        # file - this may fail, e.g. across filesystem boundaries (and
-        # it's quite common for /tmp to be a separate filesystem
-        if (rename($file, $dest)) {
-            debug("renamed $file to $dest") if $DEBUG;
-            # success!  clean up and return nothing much at all
-            $self->cleanup;
-            return '';
-        }
-    }
-
-    # either we can't rename the file or the user hasn't specified
-    # an output file, so we load the generated document into memory
-    unless (open(FH, $file)) {
-        $self->throw("failed to open $file for input");
-    }
-    local $/ = undef;       # slurp file in one go
-    binmode(FH);
-    $data = <FH>;
-    close(FH);
-
-    # cleanup the temporary directory we created
-    $self->cleanup;
-
-    # write the document back out to any destination file specified
-    if ($output) {
-        debug("writing output to $dest\n") if $DEBUG;
-        my $error = Template::_output($dest, \$data, { binmode => 1 });
-        $self->throw($error) if $error;
-        return '';
-    }
-
-    debug("returning ", length($data), " bytes of document data\n")
-        if $DEBUG;
-
-    # or just return the data
-    return $data;
-}
-
-
-#------------------------------------------------------------------------
-# $self->cleanup
-#
-# cleans up the temporary directory if it exists and was not specified
-# as a configuration option
-#------------------------------------------------------------------------
-
-sub cleanup {
-    my $self = shift;
-    return unless ref $self;
-    return if $self->options->{tmpdir};
-    my $tmpdir = $self->tmpdir;
-    rmtree($tmpdir) if defined($tmpdir) and -d $tmpdir;
-}
 
 sub throw {
     my $self = shift;
-    $self->cleanup;
     die Template::Exception->new( $THROW => join('', @_) );
 }
 
-sub debug {
-    print STDERR "[latex] ", @_;
-    print STDERR "\n" unless $_[-1] =~ /\n$/;
-}
 
-sub basepath {
-    my $self = shift;
-    return File::Spec->catfile($self->tmpdir, $self->basename);
-}
 
 
 1;

@@ -13,12 +13,12 @@
 
 use strict;
 use warnings;
-use FindBin;
-use lib ( "$FindBin::Bin/lib", "./lib", "../lib" );
+use FindBin qw($Bin);
+use Cwd qw(abs_path);
+use lib ( abs_path("$Bin/../lib"), "$Bin/lib" );
 use Template;
 use Template::Test;
 use Template::Test::Latex;
-use Template::Latex;
 use File::Spec;
 
 $Template::Latex::DEBUG = grep(/-d/, @ARGV);

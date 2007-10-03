@@ -57,12 +57,12 @@ my %opts = (
     'PMLIBDIRS'    => [ 'lib' ], 
     'PREREQ_PM'    => { 
         'Template'      => 2.16,
-	'LaTeX::Driver' => 0.04,
+	'LaTeX::Driver' => 0.06,
+	'LaTeX::Encode' => 0.02,
     },
     'dist'         => {
         'COMPRESS' => 'gzip',
         'SUFFIX'   => 'gz',
-        'PREOP'    => 'bin/distfix -v -y',
     },
     'clean'        => {
         'FILES'    => join(' ', qw( t/output/test1.pdf 

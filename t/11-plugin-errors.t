@@ -65,6 +65,7 @@ sub head_factory {
 
 __END__
 
+# 1. USE, but then no FILTER - should work
 -- test -- 
 [[% USE Latex %]]
 -- expect --
@@ -75,6 +76,7 @@ __END__
 # test error handling
 #------------------------------------------------------------------------
 
+# 2. invalid LaTeX source text
 -- test --
 [% USE Latex -%]
 [% TRY;
@@ -84,8 +86,12 @@ __END__
    END
 %]
 -- expect --
-latex error - output format not specified
+latex error - pdflatex exited with errors:
+! LaTeX Error: Missing \begin{document}.
+l.1 h
+! Emergency stop.
 
+# 3. invalid format on USE
 -- test --
 [% USE Latex format="nonsense"-%]
 [% TRY;
@@ -95,8 +101,9 @@ latex error - output format not specified
    END
 %]
 -- expect --
-latex error - invalid output format: nonsense
+latex error - invalid output format: 'nonsense'
 
+# 4. invalid format on FILTER
 -- test --
 [% USE Latex -%]
 [% TRY;
@@ -106,8 +113,9 @@ latex error - invalid output format: nonsense
    END
 %]
 -- expect --
-latex error - invalid output format: rubbish
+latex error - invalid output format: 'rubbish'
 
+# 5. non-existent file
 -- test --
 [% USE Latex -%]
 [% TRY;
