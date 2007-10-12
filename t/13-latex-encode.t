@@ -18,6 +18,8 @@ use Template;
 use Template::Test;
 use File::Spec;
 
+
+
 $Template::Latex::DEBUG = grep(/-d/, @ARGV);
 
 my $out = 'output';

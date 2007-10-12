@@ -10,8 +10,22 @@
 #
 #
 #------------------------------------------------------------------------
-# $Id: Changes 66 2007-09-15 15:01:33Z ford $
+# $Id: Changes 82 2007-10-12 23:47:35Z ford $
 #========================================================================
+
+#------------------------------------------------------------------------
+# Version 3.00_04 - 2007-10-13
+#------------------------------------------------------------------------
+
+* Added a test script for the "table" method
+
+* Updated dependency on LaTeX::Driver to 0.07 as 0.06 failed to build
+  on cpantesters machines
+
+* mark 11-plugin-errors.t as all skipped, as the error messages that
+  are checked for are not what the driver module produces - I need to
+  review this test script and change some of the individual checks to
+  do meaningful things
 
 #------------------------------------------------------------------------
 # Version 3.00_03 - 2007-10-03

@@ -7,7 +7,6 @@ use Config;
 use File::Spec::Functions qw( catfile );
 use Template;
 use ExtUtils::MakeMaker;
-use Template::Plugin::Latex;
 use Cwd;
 
 select STDERR;
@@ -17,13 +16,14 @@ select STDOUT;
 our $QUIET  = 0;
 our $ACCEPT = 0;
 our $WIN32  = ($^O eq 'MSWin32');
+our $MODVERSION = get_module_version();
 
 #------------------------------------------------------------------------
 
 message(<<EOF);
 
-Template-Plugin-Latex v$Template::Plugin::Latex::VERSION
------------------------------------------
+Template-Plugin-Latex v$MODVERSION
+------------------------------
 
 The Template-Latex modules add LaTeX support for the Template Toolkit.
 
@@ -57,7 +57,7 @@ my %opts = (
     'PMLIBDIRS'    => [ 'lib' ], 
     'PREREQ_PM'    => { 
         'Template'      => 2.16,
-	'LaTeX::Driver' => 0.06,
+	'LaTeX::Driver' => 0.07,
 	'LaTeX::Encode' => 0.02,
 	'LaTeX::Table'  => 0,
     },
@@ -147,3 +147,17 @@ sub ttprompt {
 }
 
 
+#------------------------------------------------------------------------
+# get_module_version()
+#
+# Reads the module version from the Template::Plugin::Latex module file
+#------------------------------------------------------------------------
+
+sub get_module_version {
+    if (open(MODULE, catfile('lib','Template','Plugin','Latex.pm'))) {
+	while (<MODULE>) {
+	    return $1 if /VERSION = "?(\d+\.[\d_]+)/;
+	}
+    }
+    return "<unkown version>";
+}

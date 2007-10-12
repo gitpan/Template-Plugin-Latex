@@ -11,7 +11,7 @@
 #   Andrew Ford   <a.ford@ford-mason.co.uk>
 #
 #------------------------------------------------------------------------
-# $Id: TODO 61 2007-09-15 14:55:56Z ford $
+# $Id: TODO 83 2007-10-12 23:48:30Z ford $
 #========================================================================
 
 #------------------------------------------------------------------------
@@ -53,3 +53,4 @@
 * review the security implications of allowing templates to specify
   program paths for latex, pdflatex and dvips.
 
+* add examples

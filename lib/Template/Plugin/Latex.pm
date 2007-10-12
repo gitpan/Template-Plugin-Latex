@@ -34,12 +34,12 @@ use warnings;
 use base 'Template::Plugin';
 
 use File::Spec;
-use LaTeX::Driver 0.06;
+use LaTeX::Driver 0.07;
 use LaTeX::Encode;
 use LaTeX::Table;
 
 
-our $VERSION = "3.00_03";
+our $VERSION = "3.00_04";
 our $DEBUG   = 0 unless defined $DEBUG;
 our $ERROR   = '';
 our $FILTER  = 'latex';
