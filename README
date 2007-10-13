@@ -1,7 +1,7 @@
 
                       Template Toolkit LaTeX Plugin
 
-                            Version 3.00_04
+                            Version 3.00_05
 
                            13 October 2007
 
@@ -45,8 +45,8 @@ already have it installed.  Available from CPAN in:
 
 To install the Template Toolkit Latex Plugin:
 
-    tar zxf Template-Latex-3.00_04.tar.gz
-    cd Template-Latex-3.00_04
+    tar zxf Template-Latex-3.00_05.tar.gz
+    cd Template-Latex-3.00_05
     perl Makefile.PL
     make
     make test

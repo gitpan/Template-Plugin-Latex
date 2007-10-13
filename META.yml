@@ -1,7 +1,7 @@
 # http://module-build.sourceforge.net/META-spec.html
 #XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
 name:         Template-Plugin-Latex
-version:      3.00_04
+version:      3.00_05
 version_from: lib/Template/Plugin/Latex.pm
 installdirs:  site
 requires:

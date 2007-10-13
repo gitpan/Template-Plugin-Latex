@@ -5,7 +5,6 @@ use strict;
 use lib qw( ./lib );
 use Config;
 use File::Spec::Functions qw( catfile );
-use Template;
 use ExtUtils::MakeMaker;
 use Cwd;
 
