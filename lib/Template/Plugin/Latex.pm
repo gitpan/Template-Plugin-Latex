@@ -39,7 +39,7 @@ use LaTeX::Encode;
 use LaTeX::Table;
 
 
-our $VERSION = "3.00_05";
+our $VERSION = "3.00";
 our $DEBUG   = 0 unless defined $DEBUG;
 our $ERROR   = '';
 our $FILTER  = 'latex';
