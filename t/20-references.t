@@ -21,10 +21,11 @@ use Template::Test;
 use Template::Test::Latex;
 use File::Spec;
 
-$Template::Latex::DEBUG = grep(/-d/, @ARGV);
 
 my $out = 'output';
 my $dir = -d 't' ? File::Spec->catfile('t', $out) : $out;
+
+require_dvitype();
 
 my $files = {
     pdf => 'test1.pdf',

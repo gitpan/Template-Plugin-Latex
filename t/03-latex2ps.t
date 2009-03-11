@@ -18,10 +18,12 @@
 
 use strict;
 use warnings;
-use lib qw( ./lib ../lib );
+use FindBin qw($Bin);
+use Cwd qw(abs_path);
+use lib ( abs_path("$Bin/../lib"), "$Bin/lib" );
 use Template;
 use Template::Test;
-#$Template::Latex::DEBUG = grep(/-d/, @ARGV);
+use Template::Test::Latex;
 
 my $ttcfg = {
     FILTERS => {

@@ -13,14 +13,14 @@
 
 use strict;
 use warnings;
-use lib qw( ./lib ../lib );
+use FindBin qw($Bin);
+use Cwd qw(abs_path);
+use lib ( abs_path("$Bin/../lib"), "$Bin/lib" );
 use Carp;
 use Template;
 use Template::Test;
 use Template::Plugin::Latex;
 use File::Spec;
-
-$Template::Latex::DEBUG = grep(/-d/, @ARGV);
 
 my $out = 'output';
 my $dir = -d 't' ? File::Spec->catfile('t', $out) : $out;

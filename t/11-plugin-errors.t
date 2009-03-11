@@ -15,14 +15,16 @@
 
 use strict;
 use warnings;
-use lib qw( ./lib ../lib );
+use FindBin qw($Bin);
+use Cwd qw(abs_path);
+use lib ( abs_path("$Bin/../lib"), "$Bin/lib" );
 
-use Test::More skip_all => "need to reallign the tests here with the diagnostics from LaTeX::Driver";
+use Test::More skip_all => "need to realign the tests here with the errors thrown by LaTeX::Driver";
 
 
 use Template;
 use Template::Test;
-#$Template::Latex::DEBUG = grep(/-d/, @ARGV);
+use Template::Test::Latex;
 
 my $ttcfg = {
     OUTPUT_PATH => 'output',
@@ -40,7 +42,8 @@ my $tests = join '', <DATA>;
 
 if ($Template::VERSION > 2.15) {
     $tests = join "\n", ("-- test --",
-			 "[% TRY; ",
+			 "[% # 1: Latex plugin not loaded", 
+                         "   TRY; ",
 			 "     hello | latex;",
 			 "   CATCH undef;",
 			 "     error;",
@@ -71,9 +74,9 @@ sub head_factory {
 
 __END__
 
-# 1. USE, but then no FILTER - should work
 -- test -- 
-[[% USE Latex %]]
+[[% # 2. USE, but then no FILTER - should work
+    USE Latex %]]
 -- expect --
 []
 
@@ -82,10 +85,10 @@ __END__
 # test error handling
 #------------------------------------------------------------------------
 
-# 2. invalid LaTeX source text
 -- test --
-[% USE Latex -%]
-[% TRY;
+[% # 3. invalid LaTeX source text
+   USE Latex;
+   TRY;
      "hello world" FILTER latex;
    CATCH latex;
      error;
@@ -96,11 +99,12 @@ latex error - pdflatex exited with errors:
 ! LaTeX Error: Missing \begin{document}.
 l.1 h
 ! Emergency stop.
+!  ==> Fatal error occurred, no output PDF file produced!
 
-# 3. invalid format on USE
 -- test --
-[% USE Latex format="nonsense"-%]
-[% TRY;
+[% # 4. invalid format on USE
+   USE Latex format="nonsense";
+   TRY;
      "hello world" FILTER latex;
    CATCH latex;
      error;
@@ -109,10 +113,11 @@ l.1 h
 -- expect --
 latex error - invalid output format: 'nonsense'
 
-# 4. invalid format on FILTER
+
 -- test --
-[% USE Latex -%]
-[% TRY;
+[% # 5. invalid format on FILTER
+   USE Latex;
+   TRY;
      "hello world" FILTER latex(format="rubbish");
    CATCH latex;
      error;
@@ -121,10 +126,10 @@ latex error - invalid output format: 'nonsense'
 -- expect --
 latex error - invalid output format: 'rubbish'
 
-# 5. non-existent file
 -- test --
-[% USE Latex -%]
-[% TRY;
+[% # 6. non-existent file
+   USE Latex;
+   TRY;
      "hello world" FILTER latex("nonsense");
    CATCH latex;
      error;
@@ -248,8 +253,9 @@ latex error - latex exited with errors:
 #------------------------------------------------------------------------
 
 -- test --
-[% USE Latex -%]
-[% TRY;
+[% # 16. latex("pdf") on invalid input
+   USE Latex;
+   TRY;
      "hello world" FILTER latex("pdf");
    CATCH latex;
      error | head(42);
@@ -259,8 +265,9 @@ latex error - latex exited with errors:
 latex error - pdflatex exited with errors:
 
 -- test --
-[% USE Latex -%]
-[% TRY;
+[% # 17. latex("ps") on invalid input
+   USE Latex;
+   TRY;
      "hello world" FILTER latex("ps");
    CATCH latex;
      error | head(39);
@@ -270,8 +277,9 @@ latex error - pdflatex exited with errors:
 latex error - latex exited with errors:
 
 -- test --
-[% USE Latex -%]
-[% TRY;
+[% # 18. latex("dvi") on invalid input
+   USE Latex;
+   TRY;
      "hello world" FILTER latex("dvi");
    CATCH latex;
      error | head(39);
@@ -286,8 +294,9 @@ latex error - latex exited with errors:
 #------------------------------------------------------------------------
 
 -- test --
-[% USE Latex filter='pdf' format='pdf' -%]
-[% TRY;
+[% # 19. invoke filter with a different name
+   USE Latex filter='pdf' format='pdf';
+   TRY;
      "hello world" FILTER pdf("example.pdf");
    CATCH latex;
      error | head(42);

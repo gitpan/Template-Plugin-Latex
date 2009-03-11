@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Template-Plugin-Latex
-version:            3.00
+version:            3.01
 abstract:           Latex support for the Template Toolkit
 author:
     - Andrew Ford <a.ford@ford-mason.co.uk>

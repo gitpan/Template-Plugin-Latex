@@ -21,7 +21,8 @@ use Template::Test;
 use Template::Test::Latex;
 use File::Spec;
 
-$Template::Latex::DEBUG = grep(/-d/, @ARGV);
+require_dvitype();
+
 
 my $out = 'output';
 my $dir = -d 't' ? File::Spec->catfile('t', $out) : $out;

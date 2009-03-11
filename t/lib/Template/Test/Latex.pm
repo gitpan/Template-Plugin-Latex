@@ -3,17 +3,28 @@ package Template::Test::Latex;
 use strict;
 use vars qw(@ISA @EXPORT);
 use Config;
+use Test::More;
 
 require Exporter;
 @ISA = qw(Exporter);
-@EXPORT = qw(find_program grep_dvi dvitype);
+@EXPORT = qw(find_program grep_dvi dvitype require_dvitype);
 
 our $WIN32  = ($^O eq 'MSWin32');
+
+$Template::Plugin::Latex::DEBUG = grep(/-d/, @ARGV);
+$Template::Plugin::Latex::DEBUG = $Template::Plugin::Latex::DEBUG;
 
 my $dvitype = find_program($ENV{PATH}, "dvitype");
 
 sub dvitype {
     return $dvitype;
+}
+
+sub require_dvitype {
+    if (!$dvitype || ! -x $dvitype) {
+        plan skip_all => "'dvitype' is not available";
+        exit(0);
+    }
 }
 
 
@@ -51,6 +62,7 @@ sub grep_dvi {
     my $regexp = shift;
     my $path = File::Spec->catfile($dir, $file);
     return "FAIL - $file does not exist" unless -f $path;
+    return "FAIL - can't find dvitype" unless $dvitype and -x $dvitype;
     my $dvioutput =  `$dvitype $path`; 
     foreach (split(/\n/, $dvioutput)) {
 	next unless /^\[(.*)\]$/;
