@@ -3,7 +3,7 @@ package Template::Test::Latex;
 use strict;
 use vars qw(@ISA @EXPORT);
 use Config;
-use Test::More;
+use Template::Test;
 
 require Exporter;
 @ISA = qw(Exporter);
@@ -22,7 +22,7 @@ sub dvitype {
 
 sub require_dvitype {
     if (!$dvitype || ! -x $dvitype) {
-        plan skip_all => "'dvitype' is not available";
+        skip_all("'dvitype' is not available");
         exit(0);
     }
 }
