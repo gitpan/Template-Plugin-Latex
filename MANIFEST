@@ -29,3 +29,4 @@ t/lib/Template/Test/Latex.pm
 t/output/README
 texinputs/tt2.sty
 META.yml                                 Module meta-data (added by MakeMaker)
+META.json                                Module JSON meta-data (added by MakeMaker)

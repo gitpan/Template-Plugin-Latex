@@ -59,53 +59,10 @@ AT\&T
 -- expect --
 mod\_perl
 
-# Latex_Encodeify string with a "{" and "}"
--- test --
-[% USE Latex; "{..}"  | latex_encode; %]
--- expect --
-\{..\}
-
-# Latex_Encodeify string with a "\"
--- test --
-[% USE Latex; "\\LaTeX"  | latex_encode; %]
--- expect --
-\textbackslash LaTeX
-
-# Latex_Encodeify string with a "#"
--- test --
-[% USE Latex; "#"  | latex_encode; %]
--- expect --
-\#
-
-# Latex_Encodeify string with a "$"
--- test --
-[% USE Latex; '$0.01'  | latex_encode; %]
--- expect --
-\$0.01
-
-# Latex_Encodeify a string with multiple special characters
--- test --
-[% USE Latex; "\\&#_^{}\\&#_^{}"  | latex_encode; %]
--- expect --
-\textbackslash\&\#\_\^{ }\{\}\textbackslash\&\#\_\^{ }\{\}
-
 # Latex_Encodeify string with intelligent double quotes
 -- test --
 [% USE Latex; 'blah "double-quoted-string" blah'  | latex_encode(iquotes = 1); %]
 -- expect --
 blah ``double-quoted-string'' blah
-
-# Latex_Encodeify string with intelligent single quotes
--- test --
-[% USE Latex; "blah 'single-quoted-string' blah"  | latex_encode(iquotes = 1); %]
--- expect --
-blah `single-quoted-string' blah
-
-# Latex_Encodeify string with 
--- test --
-[% USE Latex; 'blah \textbf{%^&*} blah'  | latex_encode(except = "\\{}"); %]
--- expect --
-blah \textbf{\%\^{ }\&*} blah
-
 
 
