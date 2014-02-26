@@ -42,7 +42,7 @@ use LaTeX::Encode;
 use LaTeX::Table;
 
 
-our $VERSION = '3.02.01';           # Update "=head1 VERSION" below!!!!
+our $VERSION = 3.03;           # Update "=head1 VERSION" below!!!!
 our $DEBUG; $DEBUG = 0 unless defined $DEBUG;
 our $ERROR   = '';
 our $FILTER  = 'latex';
@@ -230,7 +230,7 @@ Template::Plugin::Latex - Template Toolkit plugin for Latex
 
 =head1 VERSION
 
-This documentation refers to C<Template::Plugin::Latex> version 3.02.01.
+This documentation refers to C<Template::Plugin::Latex> version 3.03
 
 =head1 SYNOPSIS
 
