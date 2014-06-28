@@ -6,11 +6,13 @@
 #   Provides an interface to Latex from the Template Toolkit.
 #
 # AUTHOR
-#   Andrew Ford    <a.ford@ford-mason.co.uk>  (current maintainer)
+#   Chris Travers  <chris.travers@gmail.com> (Current Maintainer)
+#   Andrew Ford    <a.ford@ford-mason.co.uk> 
 #   Andy Wardley   <abw@wardley.org>
 #
 # COPYRIGHT
-#   Copyright (C) 2006-2007 Andrew Ford.   All Rights Reserved.
+#   Copyright (C) 2014      Chris Travers. All Rights Reserved.
+#   Copyright (C) 2006-2014 Andrew Ford.   All Rights Reserved.
 #   Copyright (C) 1996-2006 Andy Wardley.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
@@ -41,7 +43,7 @@ use Template::Exception;
 use Template::Plugin::Latex;
 use LaTeX::Driver;
 
-our $VERSION  = 3.03;
+our $VERSION  = 3.06;
 our $DEBUG    = 0 unless defined $DEBUG;
 our $ERROR    = '';
 our $FILTER   = 'latex';        # default filter name

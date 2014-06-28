@@ -25,13 +25,19 @@ use Template;
 use Template::Test;
 use Template::Test::Latex;
 
+my $run_tests = $ENV{LATEX_TESTING} || $ENV{ALL_TESTING};
+
 my $ttcfg = {
     FILTERS => {
         head => [ \&head_factory, 1],
     }
 };
 
-test_expect(\*DATA, $ttcfg);
+if ($run_tests){
+    test_expect(\*DATA, $ttcfg);
+} else {
+    ok(1, 'Tests skipped, LATEX_TESTING not set');
+}
 
 # Grab just the first $len bytes of the input, and optionally convert
 # to a hex string if $hex is set

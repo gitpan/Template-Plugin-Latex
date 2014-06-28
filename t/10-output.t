@@ -22,6 +22,8 @@ use Template::Test;
 use Template::Plugin::Latex;
 use File::Spec;
 
+my $run_tests = $ENV{LATEX_TESTING} || $ENV{ALL_TESTING};
+
 my $out = 'output';
 my $dir = -d 't' ? File::Spec->catfile('t', $out) : $out;
 
@@ -41,7 +43,11 @@ my $ttcfg = {
     },
 };
 
-test_expect(\*DATA, $ttcfg);
+if ($run_tests){
+    test_expect(\*DATA, $ttcfg);
+} else {
+    ok(1, 'Skipping tests, LATEX_TESTING not set');
+}
 
 sub clean_file {
     my $file = shift;

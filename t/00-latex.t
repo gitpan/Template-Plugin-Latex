@@ -15,17 +15,15 @@ use strict;
 use warnings;
 use FindBin qw($Bin);
 use Cwd qw(abs_path);
+use Test::More tests => 14;
 use lib ( abs_path("$Bin/../lib") );
-use Template::Latex;
-use Template::Test;
 use constant TL => 'Template::Latex';
-
-ntests(13);
 
 #------------------------------------------------------------------------
 # test methods to get/set paths
 #------------------------------------------------------------------------
 
+use_ok('Template::Latex');
 ok( TL->latex_path('/path/to/latex'), 'set latex path' );
 is( TL->latex_path(), '/path/to/latex', 'get latex path' );
 
